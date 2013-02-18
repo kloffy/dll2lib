@@ -16,7 +16,19 @@ def StripLibraryNamingConvention(file, extension=LIB_EXT):
     if match: name = match.group(1)
     
     return name + '.' + extension
-    
+
+class CommandPrompt(object):
+    def __init__(self):
+        #startupinfo = subprocess.STARTUPINFO()
+        #startupinfo.dwFlags |= _subprocess.STARTF_USESHOWWINDOW
+        #startupinfo.wShowWindow = _subprocess.SW_HIDE
+        
+        self.proc = subprocess.Popen('cmd.exe /k', cwd=cwd, shell=True, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+    def push(self, command):
+        self.proc.stdin.write(command + '\n')
+    def execute(self):
+        return self.proc.communicate()
+
 class Dll2Lib(object):
     DefaultTitle = 'Dll2Lib'
     DefaultPosition = wx.DefaultPosition
@@ -231,18 +243,13 @@ class Dll2Lib(object):
         self.about.Fit()
         
     def Execute(self, command, cwd=None):
-        #startupinfo = subprocess.STARTUPINFO()
-        #startupinfo.dwFlags |= _subprocess.STARTF_USESHOWWINDOW
-        #startupinfo.wShowWindow = _subprocess.SW_HIDE
-        
         vsvars = vsconfig.VarsPath(Dll2Lib.SelectedVS)
         
-        proc = subprocess.Popen('cmd.exe /k', cwd=cwd, shell=True, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+        commands = CommandPrompt()
+        commands.push('"' + vsvars + '"')
+        commands.push(command)
         
-        proc.stdin.write('"' + vsvars + '"' + '\n')
-        proc.stdin.write(command + '\n')
-        
-        return proc.communicate()
+        return commands.execute()
     
     def CreateTmp(self, dllDirectory, dllFile, tmpFile):
         command = 'dumpbin /exports /out:%s %s' % (tmpFile, dllFile)

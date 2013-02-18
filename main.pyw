@@ -234,7 +234,7 @@ It provides a simple GUI to invoke the appropriate Visual Studio command line to
         
         sizer = wx.BoxSizer(wx.VERTICAL)
         
-        sizer.Add(lblAbout, 1, flag = wx.EXPAND | wx.ALL, border = 10)
+        sizer.Add(lblAbout, 1, flag = wx.EXPAND | (wx.ALL & ~wx.TOP), border = 10)
         sizer.Add(wikiHyperlink, 0, flag = wx.EXPAND | (wx.ALL & ~wx.TOP), border = 10)
         
         button = wx.Button(self.about, wx.ID_OK)

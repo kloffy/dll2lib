@@ -27,8 +27,12 @@ setup(
         }
     ],
     options = {
+        "build": {
+            "build_base": 'temp',
+        },
         "py2exe": {
-            "includes":['anydbm', 'dbhash'],
+            "includes": ['anydbm', 'dbhash'],
+            "dist_dir": 'dist',
             #"skip_archive": 1,
         },
     },

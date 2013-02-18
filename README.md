@@ -6,4 +6,4 @@ It provides a simple GUI to invoke the appropriate Visual Studio command line to
 
 *****
 
-Before using this utility, please ensure that Visual Studio is installed on your system.
+Before attempting to use this utility, please ensure that Visual Studio is installed on your system.

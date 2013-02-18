@@ -18,7 +18,7 @@ def StripLibraryNamingConvention(file, extension=LIB_EXT):
     return name + '.' + extension
 
 class CommandPrompt(object):
-    def __init__(self):
+    def __init__(self, cwd):
         #startupinfo = subprocess.STARTUPINFO()
         #startupinfo.dwFlags |= _subprocess.STARTF_USESHOWWINDOW
         #startupinfo.wShowWindow = _subprocess.SW_HIDE
@@ -245,14 +245,14 @@ class Dll2Lib(object):
     def Execute(self, command, cwd=None):
         vsvars = vsconfig.VarsPath(Dll2Lib.SelectedVS)
         
-        commands = CommandPrompt()
+        commands = CommandPrompt(cwd)
         commands.push('"' + vsvars + '"')
         commands.push(command)
         
         return commands.execute()
     
     def CreateTmp(self, dllDirectory, dllFile, tmpFile):
-        command = 'dumpbin /exports /out:%s %s' % (tmpFile, dllFile)
+        command = 'dumpbin /exports /out:%s "%s"' % (tmpFile, dllFile)
         
         out, err = self.Execute(command, cwd=dllDirectory)
         

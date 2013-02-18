@@ -33,5 +33,5 @@ setup(
         },
     },
     zipfile = "data/library.zip",
-    #data_files=["icon.ico"]
+    #data_files=["gear.ico"]
 )

@@ -41,12 +41,11 @@ class Dll2Lib(object):
     
     def __init__(self, config):
         self.config = config
-        self.config.setdefault('path', '')
-    
+        
         self.InitUI()
     
-    def CreateNotebookPanelWithTextCtrl(self, notebook):
-        panel = wx.Panel(notebook)
+    def CreatePanelWithTextCtrl(self, parent):
+        panel = wx.Panel(parent)
         sizer = wx.BoxSizer()
         
         text = wx.TextCtrl(panel, style=wx.TE_MULTILINE | wx.TE_READONLY)
@@ -59,7 +58,7 @@ class Dll2Lib(object):
         return panel, text
     
     def InitUI(self):
-        self.frame = wx.Frame(None, title=Dll2Lib.DefaultTitle, pos=Dll2Lib.DefaultPosition, size=Dll2Lib.DefaultSize, style=Dll2Lib.DefaultStyle)
+        self.frame = wx.Frame(None, title=Dll2Lib.DefaultTitle, size=self.config['size'], pos=self.config['pos'], style=Dll2Lib.DefaultStyle)
         
         self.InitIcon()
         
@@ -97,9 +96,9 @@ class Dll2Lib(object):
         
         nb = wx.Notebook(panel)
         
-        pnlOut, self.txtOut = self.CreateNotebookPanelWithTextCtrl(nb)
-        pnlTmp, self.txtTmp = self.CreateNotebookPanelWithTextCtrl(nb)
-        pnlDef, self.txtDef = self.CreateNotebookPanelWithTextCtrl(nb)
+        pnlOut, self.txtOut = self.CreatePanelWithTextCtrl(nb)
+        pnlTmp, self.txtTmp = self.CreatePanelWithTextCtrl(nb)
+        pnlDef, self.txtDef = self.CreatePanelWithTextCtrl(nb)
         
         nb.AddPage(pnlOut, "Console")
         nb.AddPage(pnlTmp, "Temporary")
@@ -141,12 +140,11 @@ class Dll2Lib(object):
         
         for vs in reversed(Dll2Lib.DetectedVS): self.cbxVS.Append(vs.name, vs)
         
-        self.cbxVS.SetSelection(0)
-        self.OnSelect(None)
-        
         for machine in ['x86','x64']: self.cbxMachine.Append(machine)
         
+        self.cbxVS.SetSelection(0)
         self.cbxMachine.SetSelection(0)
+        
         self.OnSelect(None)
         
         # Proper way?
@@ -224,7 +222,12 @@ class Dll2Lib(object):
     def InitAboutDialog(self):
         self.about = wx.Dialog(self.frame, wx.ID_ANY, "About Dll2Lib")
         
-        lblAbout = wx.StaticText(self.about, wx.ID_ANY, "Dll2Lib is a GUI for generating '.lib' files from '.dll' files.\nIt invokes Visual Studio command line tools.\nIcon courtesy of PixelMixer.", style=wx.ALIGN_CENTRE)
+        text = \
+'''
+Dll2Lib is a convenience utility for generating '.lib' files from '.dll' files.
+It provides a simple GUI to invoke the appropriate Visual Studio command line tools.
+'''
+        lblAbout = wx.StaticText(self.about, wx.ID_ANY, text + "Icon courtesy of PixelMixer.", style=wx.ALIGN_CENTER)
         
         wikiUrl = 'http://pixel-mixer.com'
         wikiHyperlink = wx.HyperlinkCtrl(self.about, wx.ID_ANY, wikiUrl, wikiUrl)
@@ -232,7 +235,7 @@ class Dll2Lib(object):
         sizer = wx.BoxSizer(wx.VERTICAL)
         
         sizer.Add(lblAbout, 1, flag = wx.EXPAND | wx.ALL, border = 10)
-        sizer.Add(wikiHyperlink, 0, flag = wx.EXPAND | (wx.ALL & ~(wx.TOP)), border = 10)
+        sizer.Add(wikiHyperlink, 0, flag = wx.EXPAND | (wx.ALL & ~wx.TOP), border = 10)
         
         button = wx.Button(self.about, wx.ID_OK)
         button.SetDefault()
@@ -396,6 +399,9 @@ class Dll2Lib(object):
         
 def main():
     config = shelve.open('config.db')
+    config.setdefault('size', Dll2Lib.DefaultSize)
+    config.setdefault('pos', Dll2Lib.DefaultPosition)
+    config.setdefault('path', '')
     
     try:
         app = wx.App()

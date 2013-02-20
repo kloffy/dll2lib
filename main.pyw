@@ -37,8 +37,15 @@ class Dll2Lib(object):
     DefaultStyle = wx.DEFAULT_FRAME_STYLE
     DetectedVS = list(vsconfig.DetectVS())
     SelectedVS = None
+    DetectedMachine = ['x64', 'x86']
     SelectedMachine = None
     
+    @property
+    def dllPath(self): return self.txtDllFile.GetValue()
+
+    @property
+    def libPath(self): return self.txtLibFile.GetValue()
+        
     def __init__(self, config):
         self.config = config
         
@@ -138,9 +145,11 @@ class Dll2Lib(object):
         
         self.frame.Bind(wx.EVT_COMBOBOX, self.OnSelect)
         
-        for vs in reversed(Dll2Lib.DetectedVS): self.cbxVS.Append(vs.name, vs)
+        for vs in reversed(Dll2Lib.DetectedVS):
+            self.cbxVS.Append(vs.name, vs)
         
-        for machine in ['x86','x64']: self.cbxMachine.Append(machine)
+        for machine in reversed(Dll2Lib.DetectedMachine):
+            self.cbxMachine.Append(machine)
         
         self.cbxVS.SetSelection(0)
         self.cbxMachine.SetSelection(0)
@@ -257,9 +266,7 @@ It provides a simple GUI to invoke the appropriate Visual Studio command line to
     def CreateTmp(self, dllDirectory, dllFile, tmpFile):
         command = 'dumpbin /exports /out:%s "%s"' % (tmpFile, dllFile)
         
-        out, err = self.Execute(command, cwd=dllDirectory)
-        
-        self.txtOut.AppendText(out)
+        return self.Execute(command, cwd=dllDirectory)
     
     def CreateDef(self, tmpDirectory, tmpFile, defFile):
         dec = r'\d+'
@@ -281,35 +288,38 @@ It provides a simple GUI to invoke the appropriate Visual Studio command line to
     def CreateLib(self, defDirectory, defFile, libFile):
         command = 'lib /NOLOGO /def:%s /out:%s /machine:%s' % (defFile, libFile, Dll2Lib.SelectedMachine)
         
-        out, err = self.Execute(command, cwd=defDirectory)
-        
-        self.txtOut.AppendText(out)
+        return self.Execute(command, cwd=defDirectory)
     
     def OnAbout(self, event):
         self.about.CenterOnParent(wx.BOTH)
         self.about.ShowModal()
     
-    def OnClick(self, event):
-        dllPath = self.txtDllFile.GetValue()
-        libPath = self.txtLibFile.GetValue()
-        
-        if not dllPath:
+    def ValidateInput(self):
+        if not self.dllPath:
             wx.MessageBox('Please specify a valid input file.', "Question", wx.ICON_QUESTION)
-            return
+            return False
             
-        if not libPath:
+        if not self.libPath:
             wx.MessageBox('Please specify a valid output file.', "Question", wx.ICON_QUESTION)
-            return
-        
+            return False
+    
         if not (Dll2Lib.SelectedVS and Dll2Lib.SelectedMachine):
             wx.MessageBox('Problem with Toolset Configuration.\n(Could not find Visual Studio?)', "Error", wx.ICON_ERROR)
-            return
+            return False
         
         vsvars = vsconfig.VarsPath(Dll2Lib.SelectedVS)
         
         if not os.path.isfile(vsvars):
             wx.MessageBox('Problem with Toolset Configuration.\n(Could not find "%s")' % vsconfig.VS_VARS, "Error", wx.ICON_ERROR)
-            return
+            return False
+            
+        return True
+    
+    def OnClick(self, event):
+        dllPath = self.dllPath
+        libPath = self.libPath
+        
+        if not self.ValidateInput(): return
         
         self.statusBar.SetStatusText("Generating Lib...")
         
@@ -330,8 +340,8 @@ It provides a simple GUI to invoke the appropriate Visual Studio command line to
         
         self.txtOut.SetValue('')
         
-        self.CreateTmp(libDirectory, dllFile, tmpFile)
-        self.txtOut.AppendText('\n')
+        out, err = self.CreateTmp(libDirectory, dllFile, tmpFile)
+        self.txtOut.AppendText(out + '\n')
         
         tmpContent = None
         with open(tmpPath, 'r') as _tmp: tmpContent = _tmp.read()
@@ -343,14 +353,14 @@ It provides a simple GUI to invoke the appropriate Visual Studio command line to
         with open(defPath, 'r') as _def: defContent = _def.read()
         self.txtDef.SetValue(defContent)
         
-        self.CreateLib(libDirectory, defFile, libFile)
-        self.txtOut.AppendText('\n')
+        out, err = self.CreateLib(libDirectory, defFile, libFile)
+        self.txtOut.AppendText(out + '\n')
         
         os.remove(tmpPath)
         os.remove(defPath)
         
         self.statusBar.SetStatusText("Done")
-        
+    
     def OnQuit(self, event):
         self.frame.Close()
         

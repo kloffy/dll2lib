@@ -30,6 +30,10 @@ class CommandPrompt(object):
         return self.proc.communicate()
 
 class Dll2Lib(object):
+    """
+    Dll2Lib is a convenience utility for generating '.lib' files from '.dll' files.
+    It provides a simple GUI to invoke the appropriate Visual Studio command line tools.
+    """
     DefaultTitle = 'Dll2Lib'
     DefaultPosition = wx.DefaultPosition
     DefaultSize = wx.Size(800, 600)
@@ -231,12 +235,9 @@ class Dll2Lib(object):
     def InitAboutDialog(self):
         self.about = wx.Dialog(self.frame, wx.ID_ANY, "About Dll2Lib")
         
-        text = \
-'''
-Dll2Lib is a convenience utility for generating '.lib' files from '.dll' files.
-It provides a simple GUI to invoke the appropriate Visual Studio command line tools.
-'''
-        lblAbout = wx.StaticText(self.about, wx.ID_ANY, text + "Icon courtesy of PixelMixer.", style=wx.ALIGN_CENTER)
+        text = Dll2Lib.__doc__ + "Icon courtesy of PixelMixer."
+        
+        lblAbout = wx.StaticText(self.about, wx.ID_ANY, text, style=wx.ALIGN_CENTER)
         
         wikiUrl = 'http://pixel-mixer.com'
         wikiHyperlink = wx.HyperlinkCtrl(self.about, wx.ID_ANY, wikiUrl, wikiUrl)

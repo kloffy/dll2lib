@@ -12,6 +12,9 @@ VS_PROTOTYPES = [
     VS(name='Visual Studio 2012', version='11.0', setup=None),
 ]
 
+def find_first(items, predicate):
+    return next(item for item in items if predicate(item))
+
 def is_os_64bit():
     return platform.machine().endswith('64')
 
@@ -33,9 +36,6 @@ VS_COMMON_DIR = 'VS7CommonDir'
 VS_COMMON_BIN_DIR = 'VS7CommonBinDir'
 
 VS_VARS = 'vsvars32.bat'
-
-def findFirst(items, predicate):
-    return next(item for item in items if predicate(item))
 
 def VarsPath(vs):
     return os.path.join(vs.setup[VS_COMMON_DIR], r"Tools", VS_VARS)
@@ -59,7 +59,7 @@ def DetectVS():
         while True:
             aSubKeyName = winreg.EnumKey(aKey, count)
             try:
-                vs_prototype = findFirst(VS_PROTOTYPES, lambda vs: vs.version == aSubKeyName)
+                vs_prototype = find_first(VS_PROTOTYPES, lambda vs: vs.version == aSubKeyName)
                 aSubKey = winreg.OpenKey(aKey, aSubKeyName)
                 try:
                     aSetupKey = winreg.OpenKey(aSubKey, REGISTRY_VS_SETUP)

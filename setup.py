@@ -1,5 +1,8 @@
 from distutils.core import setup
 
+import wxversion
+wxversion.select('3.0')
+
 import py2exe
 
 '''

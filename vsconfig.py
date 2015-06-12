@@ -10,6 +10,7 @@ VS_PROTOTYPES = [
     VS(name='Visual Studio 2008', version='9.0', setup=None),
     VS(name='Visual Studio 2010', version='10.0', setup=None),
     VS(name='Visual Studio 2012', version='11.0', setup=None),
+    VS(name='Visual Studio 2013', version='12.0', setup=None),
 ]
 
 def find_first(items, predicate):

@@ -8,6 +8,11 @@ import vsconfig
 
 DLL_EXT, TMP_EXT, DEF_EXT, LIB_EXT = 'dll', 'tmp', 'def', 'lib'
 
+def PlainLibraryNamingConvention(file, extension=LIB_EXT):
+    name, _ = os.path.splitext(file)
+    
+    return name + '.' + extension
+    
 def StripLibraryNamingConvention(file, extension=LIB_EXT):
     name, _ = os.path.splitext(file)
     
@@ -39,6 +44,7 @@ class Dll2Lib(object):
     DefaultSize = wx.Size(800, 600)
     DefaultLabelSize = wx.Size(80,-1)
     DefaultStyle = wx.DEFAULT_FRAME_STYLE
+    DefaultStripLibraryNaming = True
     DetectedVS = list(vsconfig.DetectVS())
     SelectedVS = None
     DetectedMachine = ['x64', 'x86']
@@ -139,7 +145,7 @@ class Dll2Lib(object):
     def InitToolset(self, panel):
         sb = wx.StaticBox(panel, label="Toolset")
         sbs = wx.StaticBoxSizer(sb, wx.VERTICAL)
-        gbs = wx.GridBagSizer(2, 2)
+        gbs = wx.GridBagSizer(3, 2)
         
         lblVS = wx.StaticText(panel, label="IDE", size=Dll2Lib.DefaultLabelSize)
         self.cbxVS = wx.ComboBox(panel, style=wx.CB_READONLY, size=wx.Size(150,-1))
@@ -147,7 +153,12 @@ class Dll2Lib(object):
         lblMachine = wx.StaticText(panel, label="Architecture", size=Dll2Lib.DefaultLabelSize)
         self.cbxMachine = wx.ComboBox(panel, style=wx.CB_READONLY, size=wx.Size(150,-1))
         
+        lblStrip = wx.StaticText(panel, label="Naming", size=Dll2Lib.DefaultLabelSize)
+        self.cbStrip = wx.CheckBox(panel, -1, "Strip Library Prefix", size=wx.Size(150,-1))
+        self.cbStrip.SetValue(self.config['strip'])
+        
         self.frame.Bind(wx.EVT_COMBOBOX, self.OnSelect)
+        self.frame.Bind(wx.EVT_CHECKBOX, self.OnCheck, self.cbStrip)
         
         for vs in reversed(Dll2Lib.DetectedVS):
             self.cbxVS.Append(vs.name, vs)
@@ -169,6 +180,9 @@ class Dll2Lib(object):
         
         gbs.Add(lblMachine, pos=(1, 0), flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT|wx.RIGHT, border=10)
         gbs.Add(self.cbxMachine, pos=(1,1), flag=wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
+        
+        gbs.Add(lblStrip, pos=(2, 0), flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT|wx.RIGHT, border=10)
+        gbs.Add(self.cbStrip, pos=(2,1), flag=wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
         
         #gbs.AddGrowableRow(0)
         #gbs.AddGrowableCol(1)
@@ -369,6 +383,9 @@ class Dll2Lib(object):
         Dll2Lib.SelectedVS = self.cbxVS.GetClientData(self.cbxVS.GetSelection())
         Dll2Lib.SelectedMachine = self.cbxMachine.GetValue()
         
+    def OnCheck(self, evt):
+        self.config['strip'] = self.cbStrip.GetValue()
+        
     def OnItemSelected(self, event):
         path = self.dirBrowser.GetPath()
         
@@ -380,9 +397,11 @@ class Dll2Lib(object):
         if path:
             directory, file = os.path.dirname(path), os.path.basename(path)
             
+            naming_convention = StripLibraryNamingConvention if self.config['strip'] else PlainLibraryNamingConvention 
+            
             dllFile = file
             dllPath = os.path.join(directory, dllFile)
-            libFile = StripLibraryNamingConvention(file, LIB_EXT)
+            libFile = naming_convention(file, LIB_EXT)
             libPath = os.path.join(directory, libFile)
             
             self.txtDllFile.SetValue(dllPath)
@@ -412,6 +431,7 @@ def main():
     config = shelve.open('config.db')
     config.setdefault('size', Dll2Lib.DefaultSize)
     config.setdefault('pos', Dll2Lib.DefaultPosition)
+    config.setdefault('strip', Dll2Lib.DefaultStripLibraryNaming)
     config.setdefault('path', '')
     
     try:
